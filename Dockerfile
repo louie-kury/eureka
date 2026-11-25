@@ -1,15 +1,8 @@
-FROM eclipse-temurin:17-jre AS builder
-WORKDIR /extracted
-ADD ./build/libs/*.jar app.jar
-RUN java -Djarmode=tools -jar app.jar extract --layers --destination /extracted/layers
-
-FROM eclipse-temurin:17-jre
-WORKDIR /application
-COPY --from=builder /extracted/layers/dependencies/ ./
-COPY --from=builder /extracted/layers/spring-boot-loader/ ./
-COPY --from=builder /extracted/layers/snapshot-dependencies/ ./
-COPY --from=builder /extracted/layers/application/ ./
-
+ARG JAVA_VERSION=17
+FROM eclipse-temurin:${JAVA_VERSION}-jre-jammy
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY build/libs/*.jar app.jar
+USER 10001:10001
 EXPOSE 8761
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
